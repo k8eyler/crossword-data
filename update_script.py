@@ -37,7 +37,7 @@ def parse_args():
     parser.add_argument(
         '--days-back',
         type=int,
-        default=30,
+        default=365,
         help='Number of days to look back (default: 30)'
     )
     parser.add_argument(

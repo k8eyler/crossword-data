@@ -22,7 +22,7 @@ parser.add_argument(
     "-s",
     "--start-date",
     help="The first date to pull from, inclusive (defaults to 30 days ago)",
-    default=datetime.strftime(datetime.now() - timedelta(days=30), DATE_FORMAT),
+    default=datetime.strftime(datetime.now() - timedelta(days=365), DATE_FORMAT),
 )
 parser.add_argument(
     "-e",
