@@ -27,7 +27,7 @@ logging.basicConfig(
     level=logging.INFO,
     format='%(asctime)s - %(levelname)s - %(message)s',
     handlers=[
-        logging.FileHandler('/app/data/crossword_updates.log'),
+        logging.FileHandler('data/crossword_updates.log'),
         logging.StreamHandler()
     ]
 )
@@ -204,7 +204,7 @@ def update_crossword_stats():
         args = parse_args()
         
         # Define paths
-        DATA_DIR = Path('/app/data')
+        DATA_DIR = Path('data')
         DATA_DIR.mkdir(exist_ok=True)
         
         # Calculate date range
