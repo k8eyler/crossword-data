@@ -1,0 +1,54 @@
+name: Update Crossword Stats
+
+on:
+  workflow_dispatch:
+
+jobs:
+  update-stats:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Debug before checkout
+      run: |
+        echo "Before checkout:"
+        pwd
+        ls -la
+    - name: Checkout repository
+      uses: actions/checkout@v3
+      with:
+        fetch-depth: 1
+        
+    - name: Debug after checkout
+      run: |
+        echo "After checkout:"
+        pwd
+        echo "Directory structure:"
+        ls -R
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.12'
+    
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+    
+    - name: Create data directory
+      run: mkdir -p data
+    
+    - name: Debug directory for update script
+      run: |
+        echo "Contents of the current directory:"
+        pwd
+        ls -la
+    
+    - name: Run update script
+      env:
+        DB_USER: ${{ secrets.DB_USER }}
+        DB_PASS: ${{ secrets.DB_PASS }}
+        DB_HOST: ${{ secrets.DB_HOST }}
+        DB_NAME: ${{ secrets.DB_NAME }}
+        DB_PORT: ${{ secrets.DB_PORT }}
+        NYT_COOKIE: ${{ secrets.NYT_COOKIE }}
+      run: python update_crossword_stats.py
