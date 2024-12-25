@@ -1,0 +1,10 @@
+services:
+  crossword-stats:
+    build: .
+    volumes:
+      - type: bind
+        source: /Users/catherineeyler/nyt-crossword-docker/data
+        target: /app/data
+    environment:
+      - TZ=America/New_York
+    restart: unless-stopped

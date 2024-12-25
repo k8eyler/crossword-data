@@ -1,0 +1,60 @@
+#0 building with "desktop-linux" instance using docker driver
+
+#1 [crossword-stats internal] load .dockerignore
+#1 transferring context: 2B 0.0s done
+#1 DONE 0.1s
+
+#2 [crossword-stats internal] load build definition from Dockerfile
+#2 transferring dockerfile: 624B 0.0s done
+#2 DONE 0.1s
+
+#3 [crossword-stats internal] load metadata for docker.io/library/python:3.12-slim
+#3 DONE 1.0s
+
+#4 [crossword-stats  1/11] FROM docker.io/library/python:3.12-slim@sha256:2a6386ad2db20e7f55073f69a98d6da2cf9f168e05e7487d2670baeb9b7601c5
+#4 DONE 0.0s
+
+#5 [crossword-stats internal] load build context
+#5 transferring context: 249B 0.0s done
+#5 DONE 0.0s
+
+#6 [crossword-stats  3/11] RUN apt-get update && apt-get install -y cron
+#6 CACHED
+
+#7 [crossword-stats 10/11] RUN chmod 0644 /etc/cron.d/crossword-cron
+#7 CACHED
+
+#8 [crossword-stats  4/11] COPY requirements.txt .
+#8 CACHED
+
+#9 [crossword-stats  6/11] COPY update_script.py .
+#9 CACHED
+
+#10 [crossword-stats  7/11] COPY .env .
+#10 CACHED
+
+#11 [crossword-stats  8/11] RUN pip install pandas requests python-dotenv tqdm sqlalchemy psycopg2-binary
+#11 CACHED
+
+#12 [crossword-stats  2/11] WORKDIR /app
+#12 CACHED
+
+#13 [crossword-stats  5/11] COPY fetch_puzzle_stats.py .
+#13 CACHED
+
+#14 [crossword-stats  9/11] RUN echo "0 */12 * * * /usr/local/bin/python /app/update_script.py >> /app/cron.log 2>&1" > /etc/cron.d/crossword-cron
+#14 CACHED
+
+#15 [crossword-stats 11/11] RUN crontab /etc/cron.d/crossword-cron
+#15 CACHED
+
+#16 [crossword-stats] exporting to image
+#16 exporting layers done
+#16 writing image sha256:3552ffe38af127e438979c779de6b91e34ac08307a77ff1178aa229bb4d32849 done
+#16 naming to docker.io/library/nyt-crossword-docker-crossword-stats done
+#16 DONE 0.0s
+ Container nyt-crossword-docker-crossword-stats-1  Starting
+Error response from daemon: Mounts denied: 
+The path /users/catherineeyler/nyt-crossword-docker/data is not shared from the host and is not known to Docker.
+You can configure shared paths from Docker -> Preferences... -> Resources -> File Sharing.
+See https://docs.docker.com/desktop/mac for more info.
