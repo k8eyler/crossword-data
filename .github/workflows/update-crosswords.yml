@@ -23,7 +23,7 @@ jobs:
     - name: Create data directory
       run: mkdir -p data
 
-    - name: Debug directory contents
+    - name: Debug directory contents  # Add this debug step here
       run: |
         pwd
         ls -la
