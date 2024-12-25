@@ -1,14 +1,29 @@
 name: Update Crossword Stats
 
 on:
-  workflow_dispatch:    # Allows manual triggering for testing
+  workflow_dispatch:
 
 jobs:
   update-stats:
     runs-on: ubuntu-latest
     
     steps:
-    - uses: actions/checkout@v3
+    - name: Debug before checkout
+      run: |
+        pwd
+        ls -la
+
+    - name: Checkout repository
+      uses: actions/checkout@v3
+      with:
+        fetch-depth: 1
+        
+    - name: Debug after checkout
+      run: |
+        echo "Current directory after checkout:"
+        pwd
+        echo "Directory contents:"
+        ls -la
     
     - name: Set up Python
       uses: actions/setup-python@v4
@@ -22,11 +37,6 @@ jobs:
     
     - name: Create data directory
       run: mkdir -p data
-
-    - name: Debug directory contents  # Add this debug step here
-      run: |
-        pwd
-        ls -la
     
     - name: Run update script
       env:
