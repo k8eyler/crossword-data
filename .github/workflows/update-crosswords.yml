@@ -10,6 +10,7 @@ jobs:
     steps:
     - name: Debug before checkout
       run: |
+        echo "Before checkout:"
         pwd
         ls -la
 
@@ -20,11 +21,11 @@ jobs:
         
     - name: Debug after checkout
       run: |
-        echo "Current directory after checkout:"
+        echo "After checkout:"
         pwd
-        echo "Directory contents:"
-        ls -la
-    
+        echo "Directory structure:"
+        ls -R
+
     - name: Set up Python
       uses: actions/setup-python@v4
       with:
@@ -37,6 +38,12 @@ jobs:
     
     - name: Create data directory
       run: mkdir -p data
+    
+    - name: Debug directory for update script
+      run: |
+        echo "Contents of the current directory:"
+        pwd
+        ls -la
     
     - name: Run update script
       env:
