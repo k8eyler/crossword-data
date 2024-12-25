@@ -1,61 +1,6 @@
-import os
-import pandas as pd
-from datetime import datetime, timedelta
-import subprocess
-from pathlib import Path
-import logging
-from sqlalchemy import create_engine, text
-from dotenv import load_dotenv
-import argparse
-
-# Load environment variables
-load_dotenv()
-
-# Database Configuration
-DB_USER = os.getenv('DB_USER')
-DB_PASS = os.getenv('DB_PASS')
-DB_HOST = os.getenv('DB_HOST')
-DB_NAME = os.getenv('DB_NAME')
-DB_PORT = os.getenv('DB_PORT', '5432')
-
-# Create database connection
-DATABASE_URL = f"postgresql://{DB_USER}:{DB_PASS}@{DB_HOST}:{DB_PORT}/{DB_NAME}"
-engine = create_engine(DATABASE_URL)
-
-# Setup logging
-logging.basicConfig(
-    level=logging.INFO,
-    format='%(asctime)s - %(levelname)s - %(message)s',
-    handlers=[
-        logging.FileHandler('data/crossword_updates.log'),
-        logging.StreamHandler()
-    ]
-)
-
-def parse_args():
-    parser = argparse.ArgumentParser(description='Update crossword stats with flexible date range')
-    parser.add_argument(
-        '--days-back',
-        type=int,
-        default=365,
-        help='Number of days to look back (default: 30)'
-    )
-    parser.add_argument(
-        '--start-date',
-        type=str,
-        help='Start date in YYYY-MM-DD format (overrides days-back if provided)'
-    )
-    parser.add_argument(
-        '--end-date',
-        type=str,
-        default=datetime.now().strftime('%Y-%m-%d'),
-        help='End date in YYYY-MM-DD format (default: today)'
-    )
-    return parser.parse_args()
-
 def upsert_crossword_stats(df, engine):
     """
-    Upsert crossword stats and track solving sessions.
+    Upsert crossword stats and track solving sessions with accurate session tracking.
     """
     # Clean the DataFrame
     df = df.copy()
@@ -63,12 +8,12 @@ def upsert_crossword_stats(df, engine):
     
     # Type conversions
     type_conversions = {
-        'puzzle_id': 'int64',  # Use int64 for bigint compatibility
+        'puzzle_id': 'int64',
         'day_of_week_integer': 'int32',
         'version': 'int32',
         'percent_filled': 'float64',
         'solved': 'bool',
-        'solving_seconds': 'Int64'  # Nullable integer type
+        'solving_seconds': 'Int64'
     }
     
     # Apply type conversions
@@ -89,6 +34,7 @@ def upsert_crossword_stats(df, engine):
     # Convert DataFrame to records
     records = df.to_dict('records')
     updates = 0
+    actual_updates = 0
     inserts = 0
     sessions_added = 0
     errors = 0
@@ -97,84 +43,86 @@ def upsert_crossword_stats(df, engine):
         for record in records:
             try:
                 puzzle_id = record['puzzle_id']
-                current_solving_seconds = record.get('solving_seconds', 0)
+                current_solving_seconds = record.get('solving_seconds', 0) or 0
                 
-                # Get previous total solving time from sessions
-                previous_total_query = text("""
-                    SELECT COALESCE(SUM(solving_seconds), 0) as total_seconds
-                    FROM puzzle_sessions
+                # Get previous puzzle state
+                check_existing = text("""
+                    SELECT solving_seconds, created_at
+                    FROM crossword_stats
                     WHERE puzzle_id = :puzzle_id
                 """)
-                previous_total = connection.execute(
-                    previous_total_query, 
+                existing = connection.execute(
+                    check_existing,
                     {"puzzle_id": puzzle_id}
-                ).scalar() or 0
-                
-                # Calculate new session time (if any)
-                session_seconds = max(0, current_solving_seconds - previous_total) if current_solving_seconds else 0
-                
-                # If there's new solving time, add a session
-                if session_seconds > 0:
-                    session_insert = text("""
-                        INSERT INTO puzzle_sessions 
-                        (puzzle_id, session_date, solving_seconds)
-                        VALUES (:puzzle_id, :session_date, :solving_seconds)
-                    """)
-                    connection.execute(session_insert, {
-                        "puzzle_id": puzzle_id,
-                        "session_date": current_date,
-                        "solving_seconds": session_seconds
-                    })
-                    sessions_added += 1
-                    logging.info(f"Added new session for puzzle_id {puzzle_id}: {session_seconds} seconds")
-                
-                # Check if puzzle exists in stats table
-                exists = connection.execute(
-                    text("SELECT 1 FROM crossword_stats WHERE puzzle_id = :puzzle_id"),
-                    {"puzzle_id": puzzle_id}
-                ).first() is not None
+                ).first()
 
-                if exists:
-                    # Update existing puzzle stats
+                if existing:
+                    previous_solving_seconds = existing.solving_seconds or 0
+                    
+                    # Only create a session if there's new solving time
+                    if current_solving_seconds > previous_solving_seconds:
+                        new_session_seconds = current_solving_seconds - previous_solving_seconds
+                        session_insert = text("""
+                            INSERT INTO puzzle_sessions 
+                            (puzzle_id, session_date, solving_seconds)
+                            VALUES (:puzzle_id, :session_date, :solving_seconds)
+                        """)
+                        connection.execute(session_insert, {
+                            "puzzle_id": puzzle_id,
+                            "session_date": current_date,
+                            "solving_seconds": new_session_seconds
+                        })
+                        sessions_added += 1
+                        logging.info(f"Added new session for puzzle_id {puzzle_id}: {new_session_seconds} seconds")
+
+                    # Update puzzle stats if needed
                     update_stmt = text("""
                         UPDATE crossword_stats 
                         SET 
-                            author = :author,
-                            editor = :editor,
-                            format_type = :format_type,
-                            print_date = :print_date,
-                            day_of_week_name = :day_of_week_name,
-                            day_of_week_integer = :day_of_week_integer,
-                            publish_type = :publish_type,
-                            title = :title,
-                            version = :version,
-                            percent_filled = :percent_filled,
-                            solved = :solved,
-                            star = :star,
-                            solving_seconds = :solving_seconds
+                            author = CASE WHEN :author IS DISTINCT FROM author THEN :author ELSE author END,
+                            editor = CASE WHEN :editor IS DISTINCT FROM editor THEN :editor ELSE editor END,
+                            format_type = CASE WHEN :format_type IS DISTINCT FROM format_type THEN :format_type ELSE format_type END,
+                            print_date = CASE WHEN :print_date IS DISTINCT FROM print_date THEN :print_date ELSE print_date END,
+                            day_of_week_name = CASE WHEN :day_of_week_name IS DISTINCT FROM day_of_week_name THEN :day_of_week_name ELSE day_of_week_name END,
+                            day_of_week_integer = CASE WHEN :day_of_week_integer IS DISTINCT FROM day_of_week_integer THEN :day_of_week_integer ELSE day_of_week_integer END,
+                            publish_type = CASE WHEN :publish_type IS DISTINCT FROM publish_type THEN :publish_type ELSE publish_type END,
+                            title = CASE WHEN :title IS DISTINCT FROM title THEN :title ELSE title END,
+                            version = CASE WHEN :version IS DISTINCT FROM version THEN :version ELSE version END,
+                            percent_filled = CASE WHEN :percent_filled IS DISTINCT FROM percent_filled THEN :percent_filled ELSE percent_filled END,
+                            solved = CASE WHEN :solved IS DISTINCT FROM solved THEN :solved ELSE solved END,
+                            star = CASE WHEN :star IS DISTINCT FROM star THEN :star ELSE star END,
+                            solving_seconds = CASE WHEN :solving_seconds IS DISTINCT FROM solving_seconds THEN :solving_seconds ELSE solving_seconds END
                         WHERE puzzle_id = :puzzle_id
+                        RETURNING CASE 
+                            WHEN xmax::text::int > 0 THEN 1
+                            ELSE 0
+                        END as was_updated
                     """)
-                    connection.execute(update_stmt, record)
+                    result = connection.execute(update_stmt, record).scalar()
                     updates += 1
-                    logging.info(f"Updated puzzle_id: {puzzle_id}")
+                    if result == 1:
+                        actual_updates += 1
+                        logging.info(f"Updated puzzle_id: {puzzle_id} (data changed)")
+                    else:
+                        logging.info(f"Checked puzzle_id: {puzzle_id} (no changes)")
                 else:
                     # Insert new puzzle stats
                     insert_stmt = text("""
                         INSERT INTO crossword_stats 
                         (author, editor, format_type, print_date, day_of_week_name, 
                          day_of_week_integer, publish_type, puzzle_id, title, version, 
-                         percent_filled, solved, star, solving_seconds)
+                         percent_filled, solved, star, solving_seconds, created_at, last_updated_at)
                         VALUES 
                         (:author, :editor, :format_type, :print_date, :day_of_week_name,
                          :day_of_week_integer, :publish_type, :puzzle_id, :title, :version,
-                         :percent_filled, :solved, :star, :solving_seconds)
+                         :percent_filled, :solved, :star, :solving_seconds, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
                     """)
                     connection.execute(insert_stmt, record)
                     inserts += 1
                     logging.info(f"Inserted new puzzle_id: {puzzle_id}")
                     
-                    # Also add initial session if solving time exists
-                    if current_solving_seconds:
+                    # Add initial session for new puzzles with solving time
+                    if current_solving_seconds > 0:
                         session_insert = text("""
                             INSERT INTO puzzle_sessions 
                             (puzzle_id, session_date, solving_seconds)
@@ -196,65 +144,5 @@ def upsert_crossword_stats(df, engine):
         
         connection.commit()
     
-    logging.info(f"Summary: {inserts} inserts, {updates} updates, {sessions_added} sessions added, {errors} errors")
-    return inserts, updates, sessions_added, errors
-
-def update_crossword_stats():
-    try:
-        args = parse_args()
-        
-        # Define paths
-        DATA_DIR = Path('data')
-        DATA_DIR.mkdir(exist_ok=True)
-        
-        # Calculate date range
-        end_date = datetime.strptime(args.end_date, '%Y-%m-%d')
-        if args.start_date:
-            start_date = datetime.strptime(args.start_date, '%Y-%m-%d')
-        else:
-            start_date = end_date - timedelta(days=args.days_back)
-        
-        # Generate output filename
-        timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
-        update_file = DATA_DIR / f'crossword_update_{timestamp}.csv'
-        
-        logging.info(f"Starting update for period {start_date.date()} to {end_date.date()}")
-        
-        # Run the fetch script with debugging
-        cmd = [
-            'python', 'fetch_puzzle_stats.py',
-            '-s', start_date.strftime('%Y-%m-%d'),
-            '-e', end_date.strftime('%Y-%m-%d'),
-            '-o', str(update_file)
-        ]
-        logging.info(f"Executing command: {' '.join(cmd)}")
-        
-        result = subprocess.run(cmd, check=True, capture_output=True, text=True)
-        logging.info(f"Fetch script stdout: {result.stdout}")
-        if result.stderr:
-            logging.warning(f"Fetch script stderr: {result.stderr}")
-        
-        # Read new data
-        logging.info("Reading update data")
-        update_df = pd.read_csv(update_file)
-        logging.info(f"Found {len(update_df)} puzzles in CSV")
-        
-        try:
-            # Upsert to database
-            logging.info(f"Attempting to upsert {len(update_df)} rows to database")
-            inserts, updates, sessions_added, errors = upsert_crossword_stats(update_df, engine)
-            logging.info(f"Successfully wrote data to database: {inserts} inserts, {updates} updates, {sessions_added} sessions, {errors} errors")
-        except Exception as e:
-            logging.error(f"Database error: {str(e)}")
-            raise
-            
-        # Cleanup temporary files
-        if update_file.exists():
-            update_file.unlink()
-            
-    except Exception as e:
-        logging.error(f"Error during update: {str(e)}", exc_info=True)
-        raise
-
-if __name__ == '__main__':
-    update_crossword_stats()
+    logging.info(f"Summary: {inserts} inserts, {updates} checks, {actual_updates} actual updates, {sessions_added} sessions added, {errors} errors")
+    return inserts, updates, actual_updates, sessions_added, errors
