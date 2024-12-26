@@ -8,7 +8,7 @@ RUN apt-get update && apt-get install -y cron
 # Copy files
 COPY requirements.txt .
 COPY fetch_puzzle_stats.py .
-COPY update_script.py .
+COPY update_crossword_stats.py .
 COPY .env .
 
 # Install Python dependencies
