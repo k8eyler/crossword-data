@@ -15,7 +15,7 @@ COPY .env .
 RUN pip install pandas requests python-dotenv tqdm sqlalchemy psycopg2-binary 
 
 # Setup cron
-RUN echo "0 */12 * * * /usr/local/bin/python /app/update_script.py --days-back 365 >> /app/cron.log 2>&1" > /etc/cron.d/crossword-cron
+RUN echo "0 */12 * * * /usr/local/bin/python /app/update_crossword_stats.py --days-back 365 >> /app/cron.log 2>&1" > /etc/cron.d/crossword-cron
 RUN chmod 0644 /etc/cron.d/crossword-cron
 RUN crontab /etc/cron.d/crossword-cron
 
