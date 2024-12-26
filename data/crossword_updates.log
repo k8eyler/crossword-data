@@ -5473,3 +5473,88 @@ Start date: 2024-12-21 00:00:00: 100%|██████████| 1/1 [00:00
 2024-12-25 13:09:41,043 - INFO - Updated puzzle_id: 22443
 2024-12-25 13:09:41,100 - INFO - Summary: 0 inserts, 5 updates, 0 errors
 2024-12-25 13:09:41,101 - INFO - Successfully wrote data to database
+2024-12-25 19:33:47,108 - INFO - Starting update for period 2024-11-25 to 2024-12-25
+2024-12-25 19:33:47,111 - INFO - Executing command: python fetch_puzzle_stats.py -s 2024-11-25 -e 2024-12-25 -o /app/data/crossword_update_20241225_193347.csv
+2024-12-25 19:34:02,564 - INFO - Fetch script stdout: Getting stats from 2024-11-25 until 2024-12-25 in 1 batches
+
+Getting puzzle solve times
+
+Writing stats to /app/data/crossword_update_20241225_193347.csv
+31 rows written to /app/data/crossword_update_20241225_193347.csv
+
+2024-12-25 19:34:02,565 - WARNING - Fetch script stderr: 
+  0%|          | 0/1 [00:00<?, ?it/s]
+Start date: 2024-11-25 00:00:00:   0%|          | 0/1 [00:00<?, ?it/s]
+Start date: 2024-11-25 00:00:00: 100%|██████████| 1/1 [00:01<00:00,  1.44s/it]
+Start date: 2024-11-25 00:00:00: 100%|██████████| 1/1 [00:01<00:00,  1.44s/it]
+
+  0%|          | 0/31 [00:00<?, ?it/s]
+  3%|▎         | 1/31 [00:00<00:19,  1.52it/s]
+  6%|▋         | 2/31 [00:01<00:14,  2.03it/s]
+ 10%|▉         | 3/31 [00:01<00:11,  2.52it/s]
+ 13%|█▎        | 4/31 [00:01<00:10,  2.59it/s]
+ 16%|█▌        | 5/31 [00:02<00:10,  2.54it/s]
+ 19%|█▉        | 6/31 [00:02<00:09,  2.54it/s]
+ 23%|██▎       | 7/31 [00:02<00:09,  2.45it/s]
+ 26%|██▌       | 8/31 [00:03<00:08,  2.63it/s]
+ 29%|██▉       | 9/31 [00:03<00:09,  2.38it/s]
+ 32%|███▏      | 10/31 [00:04<00:09,  2.24it/s]
+ 35%|███▌      | 11/31 [00:04<00:09,  2.14it/s]
+ 39%|███▊      | 12/31 [00:05<00:09,  2.08it/s]
+ 42%|████▏     | 13/31 [00:05<00:08,  2.14it/s]
+ 45%|████▌     | 14/31 [00:06<00:07,  2.21it/s]
+ 48%|████▊     | 15/31 [00:06<00:06,  2.33it/s]
+ 52%|█████▏    | 16/31 [00:06<00:06,  2.49it/s]
+ 55%|█████▍    | 17/31 [00:07<00:05,  2.47it/s]
+ 58%|█████▊    | 18/31 [00:07<00:04,  2.64it/s]
+ 61%|██████▏   | 19/31 [00:07<00:04,  2.83it/s]
+ 65%|██████▍   | 20/31 [00:08<00:03,  2.77it/s]
+ 68%|██████▊   | 21/31 [00:08<00:03,  2.58it/s]
+ 71%|███████   | 22/31 [00:09<00:03,  2.51it/s]
+ 74%|███████▍  | 23/31 [00:09<00:03,  2.64it/s]
+ 77%|███████▋  | 24/31 [00:09<00:02,  2.59it/s]
+ 81%|████████  | 25/31 [00:10<00:02,  2.73it/s]
+ 84%|████████▍ | 26/31 [00:10<00:01,  2.88it/s]
+ 87%|████████▋ | 27/31 [00:10<00:01,  2.72it/s]
+ 90%|█████████ | 28/31 [00:11<00:01,  2.57it/s]
+ 94%|█████████▎| 29/31 [00:11<00:00,  2.52it/s]
+ 97%|█████████▋| 30/31 [00:12<00:00,  2.63it/s]
+100%|██████████| 31/31 [00:12<00:00,  2.61it/s]
+100%|██████████| 31/31 [00:12<00:00,  2.48it/s]
+
+2024-12-25 19:34:02,565 - INFO - Reading update data
+2024-12-25 19:34:02,673 - INFO - Found 31 puzzles in CSV
+2024-12-25 19:34:02,674 - INFO - Attempting to upsert 31 rows to database
+2024-12-25 19:34:04,457 - INFO - Updated puzzle_id: 22362
+2024-12-25 19:34:04,582 - INFO - Updated puzzle_id: 22370
+2024-12-25 19:34:04,712 - INFO - Updated puzzle_id: 22398
+2024-12-25 19:34:05,063 - INFO - Updated puzzle_id: 22397
+2024-12-25 19:34:05,188 - INFO - Updated puzzle_id: 22378
+2024-12-25 19:34:05,314 - INFO - Updated puzzle_id: 22379
+2024-12-25 19:34:05,494 - INFO - Updated puzzle_id: 22375
+2024-12-25 19:34:05,620 - INFO - Updated puzzle_id: 22409
+2024-12-25 19:34:05,740 - INFO - Updated puzzle_id: 22372
+2024-12-25 19:34:05,861 - INFO - Updated puzzle_id: 22416
+2024-12-25 19:34:06,084 - INFO - Updated puzzle_id: 22405
+2024-12-25 19:34:06,209 - INFO - Updated puzzle_id: 22396
+2024-12-25 19:34:06,334 - INFO - Updated puzzle_id: 22404
+2024-12-25 19:34:06,589 - INFO - Updated puzzle_id: 22406
+2024-12-25 19:34:06,718 - INFO - Updated puzzle_id: 22400
+2024-12-25 19:34:06,841 - INFO - Updated puzzle_id: 22402
+2024-12-25 19:34:07,008 - INFO - Updated puzzle_id: 22395
+2024-12-25 19:34:07,134 - INFO - Updated puzzle_id: 22401
+2024-12-25 19:34:07,258 - INFO - Updated puzzle_id: 22415
+2024-12-25 19:34:07,393 - INFO - Updated puzzle_id: 22417
+2024-12-25 19:34:07,600 - INFO - Updated puzzle_id: 22414
+2024-12-25 19:34:07,725 - INFO - Updated puzzle_id: 22411
+2024-12-25 19:34:07,849 - INFO - Updated puzzle_id: 22434
+2024-12-25 19:34:08,057 - INFO - Updated puzzle_id: 22380
+2024-12-25 19:34:08,174 - INFO - Updated puzzle_id: 22440
+2024-12-25 19:34:08,301 - INFO - Updated puzzle_id: 22441
+2024-12-25 19:34:08,421 - INFO - Updated puzzle_id: 22432
+2024-12-25 19:34:08,638 - INFO - Updated puzzle_id: 22433
+2024-12-25 19:34:08,762 - INFO - Updated puzzle_id: 22431
+2024-12-25 19:34:09,107 - INFO - Updated puzzle_id: 22435
+2024-12-25 19:34:09,242 - INFO - Updated puzzle_id: 22443
+2024-12-25 19:34:09,302 - INFO - Summary: 0 inserts, 31 updates, 0 errors
+2024-12-25 19:34:09,303 - INFO - Successfully wrote data to database
