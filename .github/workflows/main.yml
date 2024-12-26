@@ -1,7 +1,7 @@
 name: Update Crossword Stats
 on:
   schedule:
-    - cron: '0 * * * *'
+    - cron: '45 * * * *'
   workflow_dispatch:
 jobs:
   update-stats:
