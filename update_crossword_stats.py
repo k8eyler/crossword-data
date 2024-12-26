@@ -1,10 +1,17 @@
+import pytz
+from datetime import datetime, timedelta
+from sqlalchemy import text
+import logging
+import pandas as pd
+
 def upsert_crossword_stats(df, engine):
     """
-    Upsert crossword stats and track solving sessions with accurate session tracking.
+    Upsert crossword stats and track solving sessions with timezone-aware timestamps.
     """
     # Clean the DataFrame
     df = df.copy()
-    current_date = datetime.now().date()
+    current_timestamp = datetime.now(pytz.UTC)
+    current_date = current_timestamp.date()
     
     # Type conversions
     type_conversions = {
@@ -47,7 +54,7 @@ def upsert_crossword_stats(df, engine):
                 
                 # Get previous puzzle state
                 check_existing = text("""
-                    SELECT solving_seconds, created_at
+                    SELECT solving_seconds, created_at AT TIME ZONE 'UTC' as created_at
                     FROM crossword_stats
                     WHERE puzzle_id = :puzzle_id
                 """)
@@ -65,11 +72,15 @@ def upsert_crossword_stats(df, engine):
                         session_insert = text("""
                             INSERT INTO puzzle_sessions 
                             (puzzle_id, session_date, solving_seconds)
-                            VALUES (:puzzle_id, :session_date, :solving_seconds)
+                            VALUES (
+                                :puzzle_id, 
+                                :session_date AT TIME ZONE 'UTC',
+                                :solving_seconds
+                            )
                         """)
                         connection.execute(session_insert, {
                             "puzzle_id": puzzle_id,
-                            "session_date": current_date,
+                            "session_date": current_timestamp,
                             "solving_seconds": new_session_seconds
                         })
                         sessions_added += 1
@@ -91,7 +102,12 @@ def upsert_crossword_stats(df, engine):
                             percent_filled = CASE WHEN :percent_filled IS DISTINCT FROM percent_filled THEN :percent_filled ELSE percent_filled END,
                             solved = CASE WHEN :solved IS DISTINCT FROM solved THEN :solved ELSE solved END,
                             star = CASE WHEN :star IS DISTINCT FROM star THEN :star ELSE star END,
-                            solving_seconds = CASE WHEN :solving_seconds IS DISTINCT FROM solving_seconds THEN :solving_seconds ELSE solving_seconds END
+                            solving_seconds = CASE WHEN :solving_seconds IS DISTINCT FROM solving_seconds THEN :solving_seconds ELSE solving_seconds END,
+                            last_updated_at = CASE 
+                                WHEN :solving_seconds IS DISTINCT FROM solving_seconds 
+                                THEN CURRENT_TIMESTAMP AT TIME ZONE 'UTC'
+                                ELSE last_updated_at 
+                            END
                         WHERE puzzle_id = :puzzle_id
                         RETURNING CASE 
                             WHEN xmax::text::int > 0 THEN 1
@@ -115,7 +131,8 @@ def upsert_crossword_stats(df, engine):
                         VALUES 
                         (:author, :editor, :format_type, :print_date, :day_of_week_name,
                          :day_of_week_integer, :publish_type, :puzzle_id, :title, :version,
-                         :percent_filled, :solved, :star, :solving_seconds, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
+                         :percent_filled, :solved, :star, :solving_seconds, 
+                         CURRENT_TIMESTAMP AT TIME ZONE 'UTC', CURRENT_TIMESTAMP AT TIME ZONE 'UTC')
                     """)
                     connection.execute(insert_stmt, record)
                     inserts += 1
@@ -126,11 +143,15 @@ def upsert_crossword_stats(df, engine):
                         session_insert = text("""
                             INSERT INTO puzzle_sessions 
                             (puzzle_id, session_date, solving_seconds)
-                            VALUES (:puzzle_id, :session_date, :solving_seconds)
+                            VALUES (
+                                :puzzle_id, 
+                                :session_date AT TIME ZONE 'UTC',
+                                :solving_seconds
+                            )
                         """)
                         connection.execute(session_insert, {
                             "puzzle_id": puzzle_id,
-                            "session_date": current_date,
+                            "session_date": current_timestamp,
                             "solving_seconds": current_solving_seconds
                         })
                         sessions_added += 1
